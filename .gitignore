@@ -1,68 +1,82 @@
-# ===============================
-# Python / AI / ML
-# ===============================
+# --------------------
+# Python
+# --------------------
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
+*.so
+*.egg-info/
+.eggs/
 .env
+.venv
 venv/
+ENV/
 env/
-*.log
+pip-wheel-metadata/
 
-# ===============================
-# Datasets & Audio Files
-# ===============================
-data/
-new_data/
-dataset/
-datasets/
+# --------------------
+# Jupyter / ML
+# --------------------
+.ipynb_checkpoints/
+*.pt
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.ckpt
+
+# --------------------
+# Audio & Dataset
+# --------------------
 *.wav
 *.mp3
 *.3gp
 *.flac
 *.ogg
+dataset/
+data/
+sampletest/
+uploads/
 
-# ===============================
-# Model Files (Very Large)
-# ===============================
-*.pth
-*.pt
-*.h5
-*.ckpt
-*.onnx
+# --------------------
+# Results / Logs
+# --------------------
+results.json
+*.log
 
-# ===============================
-# Jupyter Notebooks
-# ===============================
-.ipynb_checkpoints/
-*.ipynb~
-
-# ===============================
-# Android Studio
-# ===============================
-.gradle/
-build/
-local.properties
-*.apk
-*.aab
+# --------------------
+# IDE / Editor
+# --------------------
+.vscode/
 .idea/
-*.iml
-.externalNativeBuild/
+*.swp
+*.swo
+*.bak
 
-# ===============================
-# OS Files
-# ===============================
+# --------------------
+# OS files
+# --------------------
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# ===============================
-# Logs & Temp
-# ===============================
-*.tmp
-*.cache
+# --------------------
+# Flask
+# --------------------
+instance/
+*.sqlite3
 
-# ===============================
-# Git
-# ===============================
-*.orig
+# --------------------
+# Build / Cache
+# --------------------
+build/
+dist/
+.cache/
+
+# --------------------
+# Secrets (IMPORTANT)
+# --------------------
+*.key
+*.pem
+config.py
