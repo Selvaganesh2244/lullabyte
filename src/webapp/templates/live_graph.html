@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Baby Emotion Dashboard</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { font-family: 'Poppins', sans-serif; background-color: #f8fbff; text-align: center; margin: 0; padding: 0; }
+    h1 { background-color: #4a90e2; color: white; padding: 15px; margin: 0; }
+    img { margin-top: 30px; width: 220px; border-radius: 15%; border: 4px solid #4a90e2; }
+    .prediction { margin-top: 20px; font-size: 24px; font-weight: bold; color: #333; }
+    .recommendation { margin-top: 10px; font-size: 18px; background: #e3f2fd; padding: 15px; border-radius: 10px; width: 70%; margin: 15px auto; }
+    .history-btn { background: #4a90e2; color: white; border: none; padding: 10px 20px; margin-top: 20px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    .history-container { display: none; width: 80%; margin: 20px auto; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-height: 350px; overflow-y: auto; }
+    .history-card { border-left: 5px solid #4a90e2; background: #f1f8ff; padding: 10px; margin-bottom: 10px; border-radius: 10px; text-align: left; }
+    .datetime { font-size: 14px; color: #777; }
+    #chart {
+      width: 85%;
+      height: 400px;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🍼 Lullabyte Baby Cry Dashboard</h1>
+  <img src="{{ url_for('static', filename='image.png') }}" alt="Baby Image">
+
+  <div class="prediction" id="livePrediction">Loading latest prediction...</div>
+  <div class="recommendation" id="liveRecommendation"></div>
+
+ <div style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;">
+  <button class="history-btn" id="toggleHistory">Show History</button>
+  <button class="history-btn" id="clearHistory" style="background: #e74c3c;">Clear History</button>
+</div>
+
+  <div class="history-container" id="historyContainer"></div>
+
+  <div id="chart"></div>
+
+  <script>
+    const emotionLevels = ["Cooing", "Babbling", "Hungry", "Belly_pain", "Discomfort", "Tired"];
+    const livePrediction = document.getElementById('livePrediction');
+    const liveRecommendation = document.getElementById('liveRecommendation');
+    const historyContainer = document.getElementById('historyContainer');
+    const toggleBtn = document.getElementById('toggleHistory');
+    let showHistory = false;
+
+    toggleBtn.addEventListener('click', () => {
+      showHistory = !showHistory;
+      historyContainer.style.display = showHistory ? 'block' : 'none';
+      toggleBtn.textContent = showHistory ? 'Hide History' : 'Show History';
+    });
+
+  document.getElementById("clearHistory").addEventListener("click", async () => {
+    if (!confirm("Are you sure you want to clear all history?")) return;
+
+    try {
+      const res = await fetch('/clear_history', { method: 'POST' });
+      const result = await res.json();
+      if (result.success) {
+        alert("✅ History cleared successfully!");
+        historyContainer.innerHTML = "";
+        livePrediction.textContent = "Predicted Result: --";
+        liveRecommendation.textContent = "";
+        Plotly.purge('chart'); // Clear the graph
+      } else {
+        alert("⚠️ Failed to clear history");
+      }
+    } catch (err) {
+      console.error("Error clearing history:", err);
+    }
+  });
+
+async function updateDashboard() {
+    try {
+      const res = await fetch('/api/results?_=' + Date.now());
+      const data = await res.json();
+
+      if (data.length > 0) {
+        const latest = data[0];
+        livePrediction.textContent = "Predicted Result: " + latest.result;
+        liveRecommendation.textContent = latest.recommendation;
+      }
+
+      // 🟢🔴 Color logic for history cards
+      historyContainer.innerHTML = data.map(item => {
+        const state = item.result.trim().toLowerCase();
+
+        let cardColor = '#f1f8ff'; // default background
+        let borderColor = '#4a90e2'; // default blue border
+
+        // 🔴 Red tone for negative states
+        if (["hungry", "belly pain", "belly_pain", "discomfort"].includes(state)) {
+          cardColor = '#ffe6e6';
+          borderColor = '#e74c3c';
+        }
+        // 🟢 Green tone for positive states
+        else if (["babbling", "cooing", "tired"].includes(state)) {
+          cardColor = '#e6ffed';
+          borderColor = '#2ecc71';
+        }
+
+        return `
+          <div class="history-card" style="border-left: 5px solid ${borderColor}; background: ${cardColor};">
+            <div class="datetime">${item.datetime}</div>
+            <div><strong>${item.result}</strong></div>
+            <div>${item.recommendation}</div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      console.error('Error updating dashboard:', err);
+    }
+  }
+
+let initialized = false;
+
+function updateGraph() {
+  fetch('/get_data')
+    .then(res => res.json())
+    .then(data => {
+      if (!data.time.length) return;
+
+      // Use pre-computed emotion_index if available
+      const yValues = data.emotion_index && data.emotion_index.length > 0
+        ? data.emotion_index
+        : data.state.map(state => emotionLevels.indexOf(state));
+
+      const trace = {
+        x: data.time,
+        y: yValues,
+        type: 'scatter',
+        mode: 'lines+markers',
+        line: { color: '#42a5f5', width: 3 },
+        marker: { size: 8 }
+      };
+
+      const layout = {
+        title: "Baby’s Emotional State Over Time",
+        xaxis: { title: "Time (HH:MM:SS)", showgrid: false },
+        yaxis: {
+          title: "Baby Emotional State",
+          tickvals: emotionLevels.map((_, i) => i),
+          ticktext: emotionLevels,
+          range: [-0.5, emotionLevels.length - 0.5]
+        },
+        margin: { l: 100, r: 50, b: 80, t: 80 }
+      };
+
+      if (!initialized) {
+        Plotly.newPlot('chart', [trace], layout);
+        initialized = true;
+      } else {
+        Plotly.update('chart', { x: [data.time], y: [yValues] }, {}, [0]);
+      }
+
+      // Update latest prediction display
+      const latestState = data.state[data.state.length - 1];
+      document.getElementById("current-prediction").innerText =
+        "Prediction: " + latestState;
+    })
+    .catch(err => console.error("Graph update failed:", err));
+}
+
+
+    function updateRecommendation() {
+      fetch('/api/results')
+        .then(res => res.json())
+        .then(data => {
+          if (data.length > 0) {
+            const latest = data[data.length - 1];
+            document.getElementById("current-recommendation").innerText =
+              "Recommendation: " + latest.recommendation;
+          }
+        });
+    }
+
+    setInterval(() => {
+      updateDashboard();
+      updateGraph();
+      updateRecommendation();
+    }, 5000);
+
+    updateDashboard();
+    updateGraph();
+    updateRecommendation();
+  </script>
+</body>
+</html>
