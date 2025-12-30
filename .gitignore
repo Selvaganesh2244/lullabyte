@@ -1,0 +1,82 @@
+# --------------------
+# Python
+# --------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.env
+.venv
+venv/
+ENV/
+env/
+pip-wheel-metadata/
+
+# --------------------
+# Jupyter / ML
+# --------------------
+.ipynb_checkpoints/
+*.pt
+*.pkl
+*.joblib
+*.h5
+*.onnx
+*.ckpt
+
+# --------------------
+# Audio & Dataset
+# --------------------
+*.wav
+*.mp3
+*.3gp
+*.flac
+*.ogg
+dataset/
+data/
+sampletest/
+uploads/
+
+# --------------------
+# Results / Logs
+# --------------------
+results.json
+*.log
+
+# --------------------
+# IDE / Editor
+# --------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*.bak
+
+# --------------------
+# OS files
+# --------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --------------------
+# Flask
+# --------------------
+instance/
+*.sqlite3
+
+# --------------------
+# Build / Cache
+# --------------------
+build/
+dist/
+.cache/
+
+# --------------------
+# Secrets (IMPORTANT)
+# --------------------
+*.key
+*.pem
+config.py
